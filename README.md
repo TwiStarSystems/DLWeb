@@ -207,13 +207,31 @@ For production use, consider:
 
 ## Security Considerations
 
-- The default configuration is for development only
-- Always change default passwords before production deployment
-- Consider adding authentication to the `/admin/` path
-- Keep Docker images updated with security patches
-- Use HTTPS in production environments
-- Implement proper input validation and sanitization
-- Regular database backups are recommended
+⚠️ **IMPORTANT**: The default configuration is for development only!
+
+### Critical Security Items for Production:
+
+1. **Change default passwords** in `docker-compose.yml` before deployment
+2. **Add authentication** to the `/admin/` path (e.g., HTTP Basic Auth via Nginx, or PHP session-based auth)
+3. **Use HTTPS** with a reverse proxy (nginx-proxy, Traefik, or Caddy)
+4. **Implement CSRF protection** in the admin forms
+5. **Add rate limiting** to prevent abuse
+6. **Set up backups** for the MySQL data volume
+7. **Use Docker secrets** for credential management in production
+8. **Keep Docker images updated** with security patches
+9. **Configure firewall rules** appropriately
+10. **Validate and sanitize all user input** (basic sanitization is included, but review for your use case)
+
+### Input Validation:
+- Page slugs are validated to contain only alphanumeric characters, hyphens, and underscores
+- Slug uniqueness is enforced at the database level
+- HTML output is escaped using `htmlspecialchars()` where appropriate
+- PDO prepared statements are used to prevent SQL injection
+
+### File Permissions:
+- Upload directory has 775 permissions with www-data ownership
+- Application files are owned by www-data user
+- Sensitive configuration should be moved to environment variables
 
 ## Troubleshooting
 

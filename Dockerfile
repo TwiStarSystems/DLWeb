@@ -39,8 +39,8 @@ COPY src/ /var/www/html/
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
-    && chmod -R 777 /var/www/html/uploads \
-    && chmod -R 777 /var/www/html/pages
+    && chmod -R 775 /var/www/html/uploads \
+    && chmod -R 775 /var/www/html/pages
 
 # Expose port 80
 EXPOSE 80

@@ -22,6 +22,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 
+                // Validate slug format (alphanumeric, hyphens, underscores only)
+                if (!preg_match('/^[a-z0-9-_]+$/i', $slug)) {
+                    echo json_encode(['success' => false, 'message' => 'Slug must contain only letters, numbers, hyphens, and underscores']);
+                    exit;
+                }
+                
+                // Check for slug uniqueness
+                if ($id) {
+                    $stmt = $db->prepare("SELECT id FROM pages WHERE slug = ? AND id != ?");
+                    $stmt->execute([$slug, $id]);
+                } else {
+                    $stmt = $db->prepare("SELECT id FROM pages WHERE slug = ?");
+                    $stmt->execute([$slug]);
+                }
+                if ($stmt->fetch()) {
+                    echo json_encode(['success' => false, 'message' => 'A page with this slug already exists']);
+                    exit;
+                }
+                
                 if ($id) {
                     // Update existing page
                     $stmt = $db->prepare("UPDATE pages SET title = ?, slug = ?, content = ?, content_type = ? WHERE id = ?");

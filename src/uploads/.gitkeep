@@ -2,4 +2,4 @@
 
 This directory is used for storing uploaded files. It is writable by the web server.
 
-**Note**: This directory should have 777 permissions in the container to allow file uploads.
+**Note**: This directory has 775 permissions in the container with www-data ownership to allow file uploads.
