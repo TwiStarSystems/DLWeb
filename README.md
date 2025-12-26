@@ -227,6 +227,12 @@ For production use, consider:
 - Slug uniqueness is enforced at the database level
 - HTML output is escaped using `htmlspecialchars()` where appropriate
 - PDO prepared statements are used to prevent SQL injection
+- Markdown parser includes XSS protection with content escaping
+- **HTML Editor Note**: The HTML editor allows direct HTML input for flexibility. In production, consider:
+  - Adding admin authentication/authorization
+  - Implementing Content Security Policy (CSP)
+  - Using a library like DOMPurify for HTML sanitization
+  - Restricting HTML editor access to trusted users only
 
 ### File Permissions:
 - Upload directory has 775 permissions with www-data ownership
