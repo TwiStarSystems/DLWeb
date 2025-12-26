@@ -171,13 +171,12 @@ function showHTMLSource() {
     const source = document.getElementById('htmlSource');
     
     if (isSourceMode) {
-        // Switch back to visual mode - sanitize to prevent XSS
-        // Note: In production, consider using DOMPurify library for better HTML sanitization
-        const tempDiv = document.createElement('div');
-        tempDiv.textContent = source.value; // This escapes the content
-        const sanitized = tempDiv.innerHTML;
-        
-        // For demo purposes, we allow the HTML. In production, use DOMPurify.sanitize()
+        // Switch back to visual mode
+        // WARNING: This allows arbitrary HTML input. In production, you should:
+        // 1. Add authentication/authorization to the admin panel
+        // 2. Use DOMPurify library: content.innerHTML = DOMPurify.sanitize(source.value);
+        // 3. Implement Content Security Policy (CSP)
+        // 4. Restrict HTML editor to trusted administrators only
         content.innerHTML = source.value;
         content.style.display = 'block';
         source.style.display = 'none';
