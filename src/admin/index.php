@@ -23,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Validate slug format (alphanumeric, hyphens, underscores only)
-                if (!preg_match('/^[a-z0-9-_]+$/i', $slug)) {
+                // Convert to lowercase for consistency
+                $slug = strtolower($slug);
+                if (!preg_match('/^[a-z0-9-_]+$/', $slug)) {
                     echo json_encode(['success' => false, 'message' => 'Slug must contain only letters, numbers, hyphens, and underscores']);
                     exit;
                 }

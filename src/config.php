@@ -39,26 +39,57 @@ function h($string) {
 
 // Helper function to parse markdown (simple implementation)
 function parseMarkdown($text) {
-    // Headers
-    $text = preg_replace('/^### (.+)$/m', '<h3>$1</h3>', $text);
-    $text = preg_replace('/^## (.+)$/m', '<h2>$1</h2>', $text);
-    $text = preg_replace('/^# (.+)$/m', '<h1>$1</h1>', $text);
+    $lines = explode("\n", $text);
+    $html = [];
+    $inList = false;
     
-    // Bold and italic
-    $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
-    $text = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $text);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        
+        if (empty($line)) {
+            if ($inList) {
+                $html[] = '</ul>';
+                $inList = false;
+            }
+            continue;
+        }
+        
+        // Headers
+        if (preg_match('/^### (.+)$/', $line, $matches)) {
+            if ($inList) { $html[] = '</ul>'; $inList = false; }
+            $html[] = '<h3>' . htmlspecialchars($matches[1]) . '</h3>';
+        } elseif (preg_match('/^## (.+)$/', $line, $matches)) {
+            if ($inList) { $html[] = '</ul>'; $inList = false; }
+            $html[] = '<h2>' . htmlspecialchars($matches[1]) . '</h2>';
+        } elseif (preg_match('/^# (.+)$/', $line, $matches)) {
+            if ($inList) { $html[] = '</ul>'; $inList = false; }
+            $html[] = '<h1>' . htmlspecialchars($matches[1]) . '</h1>';
+        }
+        // List items
+        elseif (preg_match('/^\- (.+)$/', $line, $matches)) {
+            if (!$inList) {
+                $html[] = '<ul>';
+                $inList = true;
+            }
+            $processed = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $matches[1]);
+            $processed = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $processed);
+            $processed = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $processed);
+            $html[] = '<li>' . $processed . '</li>';
+        }
+        // Regular text
+        else {
+            if ($inList) { $html[] = '</ul>'; $inList = false; }
+            $processed = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $line);
+            $processed = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $processed);
+            $processed = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $processed);
+            $html[] = '<p>' . $processed . '</p>';
+        }
+    }
     
-    // Lists
-    $text = preg_replace('/^\- (.+)$/m', '<li>$1</li>', $text);
-    $text = preg_replace('/(<li>.*<\/li>)/s', '<ul>$1</ul>', $text);
+    if ($inList) {
+        $html[] = '</ul>';
+    }
     
-    // Paragraphs
-    $text = preg_replace('/\n\n/', '</p><p>', $text);
-    $text = '<p>' . $text . '</p>';
-    
-    // Links
-    $text = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $text);
-    
-    return $text;
+    return implode("\n", $html);
 }
 ?>
