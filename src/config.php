@@ -71,17 +71,17 @@ function parseMarkdown($text) {
                 $html[] = '<ul>';
                 $inList = true;
             }
-            $processed = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $matches[1]);
-            $processed = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $processed);
-            $processed = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $processed);
+            $processed = preg_replace_callback('/\*\*(.+?)\*\*/', function($m) { return '<strong>' . htmlspecialchars($m[1]) . '</strong>'; }, $matches[1]);
+            $processed = preg_replace_callback('/\*(.+?)\*/', function($m) { return '<em>' . htmlspecialchars($m[1]) . '</em>'; }, $processed);
+            $processed = preg_replace_callback('/\[(.+?)\]\((.+?)\)/', function($m) { return '<a href="' . htmlspecialchars($m[2]) . '">' . htmlspecialchars($m[1]) . '</a>'; }, $processed);
             $html[] = '<li>' . $processed . '</li>';
         }
         // Regular text
         else {
             if ($inList) { $html[] = '</ul>'; $inList = false; }
-            $processed = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $line);
-            $processed = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $processed);
-            $processed = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2">$1</a>', $processed);
+            $processed = preg_replace_callback('/\*\*(.+?)\*\*/', function($m) { return '<strong>' . htmlspecialchars($m[1]) . '</strong>'; }, $line);
+            $processed = preg_replace_callback('/\*(.+?)\*/', function($m) { return '<em>' . htmlspecialchars($m[1]) . '</em>'; }, $processed);
+            $processed = preg_replace_callback('/\[(.+?)\]\((.+?)\)/', function($m) { return '<a href="' . htmlspecialchars($m[2]) . '">' . htmlspecialchars($m[1]) . '</a>'; }, $processed);
             $html[] = '<p>' . $processed . '</p>';
         }
     }

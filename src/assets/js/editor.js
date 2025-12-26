@@ -208,13 +208,17 @@ function parseMarkdown(text) {
     // Links
     html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
     
-    // Lists
+    // Lists - convert list items to <li> tags
     html = html.replace(/^\- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
     
-    // Paragraphs
+    // Wrap consecutive list items in <ul>
+    html = html.replace(/(<li>.*?<\/li>\n?)+/g, function(match) {
+        return '<ul>' + match + '</ul>';
+    });
+    
+    // Paragraphs - split by double newlines and wrap non-HTML lines
     html = html.split('\n\n').map(para => {
-        if (!para.match(/^<[h|u|l]/)) {
+        if (!para.match(/^<[hul]/)) {
             return '<p>' + para + '</p>';
         }
         return para;
