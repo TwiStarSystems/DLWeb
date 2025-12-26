@@ -1,0 +1,27 @@
+# MySQL Data
+mysql-data/
+
+# PHP Session files
+sessions/
+
+# Logs
+logs/
+*.log
+
+# Environment files with sensitive data
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup

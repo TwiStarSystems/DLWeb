@@ -1,0 +1,5 @@
+# Pages Directory
+
+This directory can be used for storing static page files if needed (optional).
+
+The main content is stored in the MySQL database, but this directory is available for additional file-based pages.

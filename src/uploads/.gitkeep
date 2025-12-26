@@ -1,0 +1,5 @@
+# Uploads Directory
+
+This directory is used for storing uploaded files. It is writable by the web server.
+
+**Note**: This directory has 775 permissions in the container with www-data ownership to allow file uploads.
