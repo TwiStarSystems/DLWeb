@@ -100,7 +100,7 @@ $pages = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Page Editor - <?php echo h(SITE_TITLE); ?></title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/editor.css">
 </head>
 <body>

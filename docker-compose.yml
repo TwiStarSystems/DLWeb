@@ -1,58 +1,41 @@
-# Production Docker Compose - Uses pre-built image from GitHub Container Registry
-# 
-# Usage:
-#   docker-compose -f docker-compose.production.yml up -d
-#
-# No need to clone the repository - just download this file and run!
-
 services:
   webserver:
-    image: ghcr.io/twistarsystems/dlweb:latest
+    build: .
     container_name: webserver
-    restart: unless-stopped
     ports:
       - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./logs:/var/log/nginx
     environment:
       - DB_HOST=mysql
       - DB_USER=webuser
       - DB_PASSWORD=webpass
       - DB_NAME=webdb
-    volumes:
-      # Persist uploaded files
-      - uploads_data:/var/www/html/uploads
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
+    restart: unless-stopped
     networks:
       - webnet
 
   mysql:
     image: mysql:latest
     container_name: mysql
-    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: webdb
-      MYSQL_USER: webuser
-      MYSQL_PASSWORD: webpass
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=webdb
+      - MYSQL_USER=webuser
+      - MYSQL_PASSWORD=webpass
     volumes:
-      - /var/dockervolumes/dlweb/mysql_data:/var/lib/mysql
-      - /var/dockervolumes/dlweb/config/mysql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      - mysql-data:/var/lib/mysql
+      - ./config/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
     networks:
       - webnet
 
 volumes:
-  mysql_data:
-    name: dlweb_mysql
-  uploads_data:
-    name: dlweb_uploads
+  mysql-data:
 
 networks:
   webnet:
-    name: dlweb_network
+    driver: bridge

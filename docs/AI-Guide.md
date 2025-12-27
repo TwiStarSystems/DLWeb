@@ -37,6 +37,66 @@ The project includes a comprehensive admin interface at `/admin/` with three fle
 
 Users can create, edit, and delete pages through an intuitive web interface without touching code.
 
+## Global Design System
+
+The project uses a cohesive dark theme design system defined in `src/assets/css/global.css` with CSS custom properties for easy customization.
+
+### Color Palette
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `--bg-main` | `#000030` | Main background (deep navy) |
+| `--bg-panel` | `#0000C8` | Panel/card backgrounds (royal blue) |
+| `--primary` | `#9600E1` | Primary actions (vibrant purple) |
+| `--secondary` | `#CC9CDF` | Secondary text/elements (soft lavender) |
+| `--danger` | `#C80000` | Destructive actions (red) |
+| `--accent` | `#FFD700` | Highlights & headings (gold) |
+| `--text-main` | `#ffffff` | Primary text (white) |
+| `--text-muted` | `#CC9CDF` | Muted/secondary text |
+
+### Key Design Components
+
+**Navigation Bar:**
+- Purple gradient background (`--primary` → `--primary-dark`)
+- Gold logo text
+- White nav links with hover effects
+
+**Cards & Panels:**
+- Blue gradient backgrounds (`--bg-panel` → darker blue)
+- Gold accent headings
+- Subtle shadow effects
+
+**Buttons:**
+- Rounded pill style (999px border-radius)
+- Primary: Purple gradient with glow on hover
+- Secondary: Panel blue with border
+- Danger: Red with ring effect on hover
+
+**Forms:**
+- Semi-transparent dark backgrounds
+- Purple focus rings
+- Lavender labels
+
+### CSS Files
+
+| File | Purpose |
+|------|---------|
+| `global.css` | Core design system, shared across all pages |
+| `editor.css` | Admin editor-specific overrides |
+
+### Customization
+
+To modify the color scheme, edit the CSS custom properties in `src/assets/css/global.css`:
+
+```css
+:root {
+    --bg-main: #000030;      /* Change main background */
+    --primary: #9600E1;      /* Change primary color */
+    --accent: #FFD700;       /* Change accent/highlight color */
+    /* ... other variables */
+}
+```
+
 ## Security as a Top Priority
 
 ### Production-Ready Security Features
@@ -109,7 +169,7 @@ environment:
 - `config/nginx/default.conf` - Nginx server configuration
 - `config/php/php-fpm.conf` - PHP runtime settings
 - `config/supervisor/supervisord.conf` - Process management
-- `config/mysql/init.sql` - Database initialization
+- `config/mysql/schema.sql` - Database schema initialization
 
 ### Environment-Based Configuration
 
@@ -124,6 +184,15 @@ Then reference in `docker-compose.yml` for secrets management in production.
 
 ## Development & Deployment Workflow
 
+### First-Time Setup
+
+On first deployment, navigate to `/setup.php` to initialize the database:
+
+1. Visit `http://your-server:8080/setup.php`
+2. Verify database connection status
+3. Click "Import Database Schema" to create tables
+4. Once complete, navigate to the homepage or admin panel
+
 ### Local Development
 
 ```bash
@@ -136,6 +205,7 @@ docker-compose logs -f webserver
 # Access services
 # Main site: http://localhost:8080
 # Admin: http://localhost:8080/admin/
+# Setup: http://localhost:8080/setup.php
 ```
 
 ### Production Deployment
@@ -172,18 +242,23 @@ docker-compose logs -f webserver
 ├── Dockerfile                          # Container definition
 ├── docker-compose.yml                  # Orchestration
 ├── README.md                           # User documentation
-├── AI-Guide.md                         # This file
+├── docs/
+│   ├── AI-Guide.md                    # This file
+│   └── CSS-colors.txt                 # Design system reference
 ├── config/
 │   ├── nginx/default.conf             # Web server config
 │   ├── php/php-fpm.conf               # PHP runtime
 │   ├── supervisor/supervisord.conf    # Process manager
-│   └── mysql/init.sql                 # DB initialization
+│   └── mysql/schema.sql               # DB schema initialization
 └── src/
     ├── index.php                       # Homepage
     ├── config.php                      # App configuration
+    ├── setup.php                       # First-time setup wizard
     ├── admin/index.php                # Admin interface
     ├── assets/
-    │   ├── css/                        # Stylesheets
+    │   ├── css/
+    │   │   ├── global.css             # Global design system
+    │   │   └── editor.css             # Editor-specific styles
     │   └── js/                         # Scripts
     ├── pages/                          # Page storage
     └── uploads/                        # User uploads

@@ -1,0 +1,153 @@
+/* =========================
+   COLOR SYSTEM
+   ========================= */
+:root {
+  --bg-main: #000030;
+  --bg-panel: #0000C8;
+
+  --primary: #9600E1;
+  --secondary: #CC9CDF;
+
+  --danger: #C80000;
+  --accent: #FFD700;
+
+  --text-main: #ffffff;
+  --text-muted: #CC9CDF;
+}
+
+/* =========================
+   GLOBAL RESET
+   ========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(160deg, var(--bg-main), #00001a);
+  color: var(--text-main);
+}
+
+/* =========================
+   LAYOUT
+   ========================= */
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* =========================
+   SIDEBAR
+   ========================= */
+.sidebar {
+  background: linear-gradient(
+    180deg,
+    var(--primary),
+    #6d00a6
+  );
+  padding: 1.5rem;
+}
+
+.sidebar h1 {
+  margin: 0 0 2rem;
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+
+.nav a {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.3rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* =========================
+   MAIN CONTENT
+   ========================= */
+.main {
+  padding: 2rem;
+}
+
+.card {
+  background: linear-gradient(
+    180deg,
+    var(--bg-panel),
+    #00008f
+  );
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: var(--secondary);
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+.button {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.button.primary {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    #b300ff
+  );
+  color: white;
+}
+
+.button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(150, 0, 225, 0.6);
+}
+
+.button.danger {
+  background: var(--danger);
+  color: white;
+}
+
+.button.danger:hover {
+  box-shadow: 0 0 0 3px rgba(200, 0, 0, 0.4);
+}
+
+/* =========================
+   HIGHLIGHTS & TAGS
+   ========================= */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #000030;
+  font-weight: 700;
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+.footer {
+  margin-top: 3rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

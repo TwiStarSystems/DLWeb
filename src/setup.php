@@ -112,135 +112,38 @@ $schemaExists = file_exists($schemaFile);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup - <?php echo h(SITE_TITLE); ?></title>
+    <link rel="stylesheet" href="/assets/css/global.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
         .setup-container {
-            background: white;
+            background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-dark));
             border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 25px 50px -12px var(--shadow-color);
             padding: 40px;
             max-width: 600px;
             width: 100%;
         }
-        h1 {
-            color: #1a202c;
+        .setup-container h1 {
+            color: var(--accent);
             margin-bottom: 10px;
             font-size: 28px;
         }
         .subtitle {
-            color: #718096;
+            color: var(--text-muted);
             margin-bottom: 30px;
-        }
-        .status-card {
-            background: #f7fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .status-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .status-item:last-child {
-            border-bottom: none;
-        }
-        .status-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 14px;
-        }
-        .status-icon.success {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        .status-icon.error {
-            background: #fed7d7;
-            color: #822727;
-        }
-        .status-icon.warning {
-            background: #fefcbf;
-            color: #744210;
         }
         .status-label {
             flex: 1;
-            color: #4a5568;
+            color: var(--text-muted);
         }
         .status-value {
             font-weight: 600;
-            color: #1a202c;
-        }
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .message.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-        .message.error {
-            background: #fed7d7;
-            color: #822727;
-            border: 1px solid #fc8181;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        .btn-danger {
-            background: #e53e3e;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #c53030;
-        }
-        .btn-secondary {
-            background: #edf2f7;
-            color: #4a5568;
-        }
-        .btn-secondary:hover {
-            background: #e2e8f0;
-        }
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+            color: var(--text-main);
         }
         .actions {
             display: flex;
@@ -249,14 +152,27 @@ $schemaExists = file_exists($schemaFile);
             margin-top: 20px;
         }
         .warning-text {
-            color: #c53030;
+            color: #ff6b6b;
             font-size: 14px;
             margin-top: 10px;
         }
         .success-actions {
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border-color);
+        }
+        .success-text {
+            color: #90EE90;
+            margin-bottom: 15px;
+        }
+        .muted-text {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .error-text {
+            font-size: 12px;
+            color: #ff6b6b;
         }
     </style>
 </head>
@@ -284,7 +200,7 @@ $schemaExists = file_exists($schemaFile);
                 <div class="status-item">
                     <span class="status-icon error">!</span>
                     <span class="status-label">Error</span>
-                    <span class="status-value" style="font-size: 12px; color: #e53e3e;">
+                    <span class="status-value error-text">
                         <?php echo h($dbCheck['error'] ?? 'Unknown error'); ?>
                     </span>
                 </div>
@@ -309,7 +225,7 @@ $schemaExists = file_exists($schemaFile);
         
         <?php if ($tablesExist): ?>
             <div class="success-actions">
-                <p style="color: #22543d; margin-bottom: 15px;">
+                <p class="success-text">
                     ✅ Your database is ready! You can start using the application.
                 </p>
                 <div class="actions">
@@ -318,7 +234,7 @@ $schemaExists = file_exists($schemaFile);
                 </div>
                 
                 <div style="margin-top: 30px;">
-                    <p style="color: #718096; font-size: 14px; margin-bottom: 10px;">
+                    <p class="muted-text">
                         Need to reset the database?
                     </p>
                     <form method="post" onsubmit="return confirm('Are you sure? This will delete all pages and data!');">

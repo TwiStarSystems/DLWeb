@@ -43,30 +43,30 @@ if ($page['content_type'] === 'markdown') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo h($page['title']); ?> - <?php echo h(SITE_TITLE); ?></title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/global.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="logo"><?php echo h(SITE_TITLE); ?></a>
-            <ul class="nav-menu">
-                <li><a href="/">Home</a></li>
-                <li><a href="?page=about">About</a></li>
-                <li><a href="/admin/">Editor</a></li>
-            </ul>
-        </div>
-    </nav>
-    
-    <main class="container">
-        <article class="content">
-            <?php echo $content; ?>
-        </article>
-    </main>
-    
-    <footer class="footer">
-        <div class="container">
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="container">
+                <a href="/" class="logo"><?php echo h(SITE_TITLE); ?></a>
+                <ul class="nav-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="?page=about">About</a></li>
+                    <li><a href="/admin/">Editor</a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <main class="container">
+            <article class="content">
+                <?php echo $content; ?>
+            </article>
+        </main>
+        
+        <footer class="footer">
             <p>&copy; <?php echo date('Y'); ?> <?php echo h(SITE_TITLE); ?>. All rights reserved.</p>
-        </div>
-    </footer>
+        </footer>
+    </div>
 </body>
 </html>
