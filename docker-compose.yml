@@ -7,7 +7,7 @@
 
 services:
   webserver:
-    image: ghcr.io/twistarsystems/DLWeb:latest
+    image: ghcr.io/twistarsystems/dlweb:latest
     container_name: webserver
     restart: unless-stopped
     ports:
@@ -48,10 +48,10 @@ services:
 
 volumes:
   mysql_data:
-    name: DLWeb_mysql
+    name: dlweb_mysql
   uploads_data:
-    name: DLWeb_uploads
+    name: dlweb_uploads
 
 networks:
   webnet:
-    name: DLWeb_network
+    name: dlweb_network
