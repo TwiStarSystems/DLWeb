@@ -1,0 +1,57 @@
+# Production Docker Compose - Uses pre-built image from GitHub Container Registry
+# 
+# Usage:
+#   docker-compose -f docker-compose.production.yml up -d
+#
+# No need to clone the repository - just download this file and run!
+
+services:
+  webserver:
+    image: ghcr.io/twistarsystems/containerize-webserver:latest
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=webuser
+      - DB_PASSWORD=webpass
+      - DB_NAME=webdb
+    volumes:
+      # Persist uploaded files
+      - uploads_data:/var/www/html/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - webnet
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: webdb
+      MYSQL_USER: webuser
+      MYSQL_PASSWORD: webpass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - webnet
+
+volumes:
+  mysql_data:
+    name: containerize-webserver_mysql
+  uploads_data:
+    name: containerize-webserver_uploads
+
+networks:
+  webnet:
+    name: containerize-webserver_network
