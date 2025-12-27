@@ -1,0 +1,41 @@
+services:
+  webserver:
+    build: .
+    container_name: webserver
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./logs:/var/log/nginx
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=webuser
+      - DB_PASSWORD=webpass
+      - DB_NAME=webdb
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - webnet
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=webdb
+      - MYSQL_USER=webuser
+      - MYSQL_PASSWORD=webpass
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./config/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - webnet
+
+volumes:
+  mysql-data:
+
+networks:
+  webnet:
+    driver: bridge
