@@ -36,6 +36,9 @@ COPY config/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy web application files
 COPY src/ /var/www/html/
 
+# Copy database schema for setup page
+COPY config/mysql/schema.sql /var/www/html/schema.sql
+
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
