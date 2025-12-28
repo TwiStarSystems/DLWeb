@@ -11,11 +11,23 @@ $messageType = '';
 $tablesExist = false;
 $schemaFile = '/var/www/html/schema.sql';
 
-// Check if tables already exist
+// Check if tables already exist (check multiple tables now)
 function checkTablesExist($pdo) {
     try {
+        // Check for roles, users, pages, and settings tables to verify full schema
+        $stmt = $pdo->query("SHOW TABLES LIKE 'roles'");
+        $rolesExist = $stmt->rowCount() > 0;
+        
+        $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
+        $usersExist = $stmt->rowCount() > 0;
+        
         $stmt = $pdo->query("SHOW TABLES LIKE 'pages'");
-        return $stmt->rowCount() > 0;
+        $pagesExist = $stmt->rowCount() > 0;
+        
+        $stmt = $pdo->query("SHOW TABLES LIKE 'settings'");
+        $settingsExist = $stmt->rowCount() > 0;
+        
+        return $rolesExist && $usersExist && $pagesExist && $settingsExist;
     } catch (PDOException $e) {
         return false;
     }
@@ -77,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'import' && $dbConnected) {
         $result = importSchema($pdo, $schemaFile);
         if ($result['success']) {
-            $message = 'Database schema imported successfully! You can now use the application.';
+            $message = 'Database schema imported successfully! You can now use the application. Default admin credentials: admin / admin123';
             $messageType = 'success';
             $tablesExist = true;
         } else {
@@ -86,10 +98,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($_POST['action'] === 'reset' && $dbConnected) {
         try {
+            // Drop tables in correct order (foreign keys)
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+            $pdo->exec("DROP TABLE IF EXISTS user_sessions");
+            $pdo->exec("DROP TABLE IF EXISTS role_permissions");
             $pdo->exec("DROP TABLE IF EXISTS pages");
+            $pdo->exec("DROP TABLE IF EXISTS users");
+            $pdo->exec("DROP TABLE IF EXISTS permissions");
+            $pdo->exec("DROP TABLE IF EXISTS roles");
+            $pdo->exec("DROP TABLE IF EXISTS settings");
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+            
             $result = importSchema($pdo, $schemaFile);
             if ($result['success']) {
-                $message = 'Database reset and schema re-imported successfully!';
+                $message = 'Database reset and schema re-imported successfully! Default admin credentials: admin / admin123';
                 $messageType = 'success';
                 $tablesExist = true;
             } else {

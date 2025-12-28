@@ -2,6 +2,8 @@
 let currentPageId = null;
 let currentBlocks = [];
 let isSourceMode = false;
+let currentPageCanEdit = true;
+let currentPageCanDelete = true;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,7 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // New Page
 function newPage() {
+    if (typeof userPermissions !== 'undefined' && !userPermissions.canCreate) {
+        alert('You do not have permission to create pages.');
+        return;
+    }
+    
     currentPageId = null;
+    currentPageCanEdit = true;
+    currentPageCanDelete = true;
     document.getElementById('pageId').value = '';
     document.getElementById('pageTitle').value = '';
     document.getElementById('pageSlug').value = '';
@@ -26,20 +35,31 @@ function newPage() {
     
     switchEditor();
     showEditor();
+    updateEditorButtons();
 }
 
 // Load Page
 function loadPage(id) {
+    const formData = new URLSearchParams();
+    formData.append('action', 'load');
+    formData.append('id', id);
+    if (typeof csrfToken !== 'undefined') {
+        formData.append('csrf_token', csrfToken);
+    }
+    
     fetch('/admin/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=load&id=${id}`
+        body: formData.toString()
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             const page = data.page;
             currentPageId = page.id;
+            currentPageCanEdit = page.can_edit !== false;
+            currentPageCanDelete = page.can_delete !== false;
+            
             document.getElementById('pageId').value = page.id;
             document.getElementById('pageTitle').value = page.title;
             document.getElementById('pageSlug').value = page.slug;
@@ -58,6 +78,7 @@ function loadPage(id) {
             
             switchEditor();
             showEditor();
+            updateEditorButtons();
         } else {
             alert('Error loading page: ' + data.message);
         }
@@ -67,8 +88,45 @@ function loadPage(id) {
     });
 }
 
+// Update editor buttons based on permissions
+function updateEditorButtons() {
+    const saveBtn = document.querySelector('.editor-actions .btn-primary');
+    const deleteBtn = document.querySelector('.editor-actions .btn-danger');
+    
+    // Enable/disable inputs based on edit permission
+    const inputs = document.querySelectorAll('#editorPanel input, #editorPanel select, #editorPanel textarea, #htmlContent');
+    inputs.forEach(input => {
+        if (currentPageCanEdit) {
+            input.removeAttribute('disabled');
+            if (input.id === 'htmlContent') {
+                input.setAttribute('contenteditable', 'true');
+            }
+        } else {
+            input.setAttribute('disabled', 'disabled');
+            if (input.id === 'htmlContent') {
+                input.setAttribute('contenteditable', 'false');
+            }
+        }
+    });
+    
+    // Update save button
+    if (saveBtn) {
+        if (currentPageCanEdit) {
+            saveBtn.style.display = '';
+            saveBtn.removeAttribute('disabled');
+        } else {
+            saveBtn.style.display = 'none';
+        }
+    }
+}
+
 // Save Page
 function savePage() {
+    if (!currentPageCanEdit) {
+        alert('You do not have permission to edit this page.');
+        return;
+    }
+    
     const title = document.getElementById('pageTitle').value;
     const slug = document.getElementById('pageSlug').value;
     const contentType = document.getElementById('contentType').value;
@@ -93,6 +151,9 @@ function savePage() {
     formData.append('content_type', contentType);
     if (currentPageId) {
         formData.append('id', currentPageId);
+    }
+    if (typeof csrfToken !== 'undefined') {
+        formData.append('csrf_token', csrfToken);
     }
     
     fetch('/admin/', {
@@ -121,10 +182,17 @@ function deletePage(id) {
         return;
     }
     
+    const formData = new URLSearchParams();
+    formData.append('action', 'delete');
+    formData.append('id', id);
+    if (typeof csrfToken !== 'undefined') {
+        formData.append('csrf_token', csrfToken);
+    }
+    
     fetch('/admin/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=delete&id=${id}`
+        body: formData.toString()
     })
     .then(response => response.json())
     .then(data => {

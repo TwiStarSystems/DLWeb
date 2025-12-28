@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Containerize-Webserver** is a Docker-based web server solution with a built-in page editor for easy website deployment and management. It provides a complete, containerized platform for hosting dynamic websites with minimal configuration overhead.
+**Containerize-Webserver** is a Docker-based web server solution with a built-in page editor for easy website deployment and management. It provides a complete, containerized platform for hosting dynamic websites with minimal configuration overhead, featuring a comprehensive Role-Based Access Control (RBAC) system.
 
 ## Core Services & Technology Stack
 
@@ -26,6 +26,62 @@ Docker Compose (Multi-container Orchestration)
     ├── MySQL 8.0 (Database)
     └── Data Volume (Persistent storage)
 ```
+
+## Authentication & Role-Based Access Control (RBAC)
+
+### User Roles
+
+The system includes six predefined roles with hierarchical permissions:
+
+| Role | Level | Description |
+|------|-------|-------------|
+| **Viewer** | 0 | Unauthenticated users - can view public content only |
+| **Subscriber** | 10 | Authenticated users - can view content and manage own profile |
+| **Writer** | 20 | Can create, edit, and delete owned articles (Feature Coming Soon) |
+| **Page Editor** | 30 | Can create, edit, and delete owned pages |
+| **Power Editor** | 40 | Can create, edit, and delete all pages |
+| **Admin** | 100 | Full control of entire site |
+
+### Permissions
+
+Permissions are organized into categories:
+
+**Page Permissions:**
+- `view_pages` - View published pages
+- `create_pages` - Create new pages
+- `edit_own_pages` - Edit pages you created
+- `edit_all_pages` - Edit any page
+- `delete_own_pages` - Delete pages you created
+- `delete_all_pages` - Delete any page
+
+**Article Permissions (Future):**
+- `create_articles`, `edit_own_articles`, `edit_all_articles`
+- `delete_own_articles`, `delete_all_articles`
+
+**Admin Permissions:**
+- `view_admin` - Access admin dashboard
+- `manage_users` - Create, edit, delete users
+- `manage_roles` - Manage role assignments
+- `manage_settings` - Modify site settings
+- `manage_uploads` - Upload and manage files
+
+### Default Admin Account
+
+After setup, a default admin account is created:
+- **Username:** `admin`
+- **Password:** `admin123`
+- ⚠️ **CHANGE THIS IMMEDIATELY IN PRODUCTION!**
+
+### Authentication Files
+
+| File | Purpose |
+|------|---------|
+| `src/auth.php` | Core authentication class with session management |
+| `src/login.php` | User login page |
+| `src/register.php` | User registration page |
+| `src/logout.php` | Session termination handler |
+| `src/403.php` | Access denied error page |
+| `src/admin/users.php` | User management (admin only) |
 
 ## Built-in Page Editor Features
 
@@ -131,15 +187,15 @@ To modify the color scheme, edit the CSS custom properties in `src/assets/css/gl
 
 ⚠️ **Before Production:**
 - [ ] Change default MySQL passwords
-- [ ] Implement admin authentication
+- [ ] **Change default admin password (admin123)**
 - [ ] Enable HTTPS with reverse proxy
-- [ ] Add CSRF protection tokens
 - [ ] Configure rate limiting rules
 - [ ] Set up automated backups for MySQL data
 - [ ] Apply HTML sanitization to user content
 - [ ] Configure firewall rules
 - [ ] Keep Docker images updated
 - [ ] Validate and sanitize all user input
+- [ ] Review user roles and permissions
 
 ## Customizability & Configuration
 
@@ -249,17 +305,26 @@ docker-compose logs -f webserver
 │   ├── nginx/default.conf             # Web server config
 │   ├── php/php-fpm.conf               # PHP runtime
 │   ├── supervisor/supervisord.conf    # Process manager
-│   └── mysql/schema.sql               # DB schema initialization
+│   └── mysql/schema.sql               # DB schema (includes RBAC tables)
 └── src/
     ├── index.php                       # Homepage
     ├── config.php                      # App configuration
+    ├── auth.php                        # Authentication & RBAC system
+    ├── login.php                       # Login page
+    ├── register.php                    # Registration page
+    ├── logout.php                      # Logout handler
+    ├── 403.php                         # Access denied page
     ├── setup.php                       # First-time setup wizard
-    ├── admin/index.php                # Admin interface
+    ├── admin/
+    │   ├── index.php                  # Page editor (permission-protected)
+    │   └── users.php                  # User management (admin only)
     ├── assets/
     │   ├── css/
     │   │   ├── global.css             # Global design system
-    │   │   └── editor.css             # Editor-specific styles
-    │   └── js/                         # Scripts
+    │   │   ├── editor.css             # Editor-specific styles
+    │   │   └── auth.css               # Authentication pages styles
+    │   └── js/
+    │       └── editor.js              # Editor JavaScript (CSRF-protected)
     ├── pages/                          # Page storage
     └── uploads/                        # User uploads
 ```

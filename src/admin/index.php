@@ -1,9 +1,22 @@
 <?php
-require_once '../config.php';
+require_once '../auth.php';
+require_once '../settings.php';
+
+// Require user to have view_admin permission
+auth()->requirePermission('view_admin', '/403.php');
+
+$currentUser = currentUser();
+$siteTitle = siteTitle();
 
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
+    
+    // Verify CSRF token for all POST requests
+    if (!auth()->verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token. Please refresh the page.']);
+        exit;
+    }
     
     $action = $_POST['action'] ?? '';
     $db = getDB();
@@ -11,11 +24,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         switch ($action) {
             case 'save':
+                // Check create permission for new pages
+                if (empty($_POST['id']) && !hasPermission('create_pages')) {
+                    echo json_encode(['success' => false, 'message' => 'You do not have permission to create pages']);
+                    exit;
+                }
+                
                 $id = $_POST['id'] ?? null;
                 $title = $_POST['title'] ?? '';
                 $slug = $_POST['slug'] ?? '';
                 $content = $_POST['content'] ?? '';
                 $content_type = $_POST['content_type'] ?? 'html';
+                
+                // For existing pages, check edit permission
+                if ($id) {
+                    $stmt = $db->prepare("SELECT author_id FROM pages WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $page = $stmt->fetch();
+                    
+                    if (!$page) {
+                        echo json_encode(['success' => false, 'message' => 'Page not found']);
+                        exit;
+                    }
+                    
+                    if (!auth()->canEditPage($page['author_id'])) {
+                        echo json_encode(['success' => false, 'message' => 'You do not have permission to edit this page']);
+                        exit;
+                    }
+                }
                 
                 if (empty($title) || empty($slug)) {
                     echo json_encode(['success' => false, 'message' => 'Title and slug are required']);
@@ -48,9 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare("UPDATE pages SET title = ?, slug = ?, content = ?, content_type = ? WHERE id = ?");
                     $stmt->execute([$title, $slug, $content, $content_type, $id]);
                 } else {
-                    // Create new page
-                    $stmt = $db->prepare("INSERT INTO pages (title, slug, content, content_type) VALUES (?, ?, ?, ?)");
-                    $stmt->execute([$title, $slug, $content, $content_type]);
+                    // Create new page with author
+                    $stmt = $db->prepare("INSERT INTO pages (title, slug, content, content_type, author_id) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([$title, $slug, $content, $content_type, $currentUser['id']]);
                     $id = $db->lastInsertId();
                 }
                 
@@ -60,6 +96,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'delete':
                 $id = $_POST['id'] ?? null;
                 if ($id) {
+                    // Check delete permission
+                    $stmt = $db->prepare("SELECT author_id FROM pages WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $page = $stmt->fetch();
+                    
+                    if (!$page) {
+                        echo json_encode(['success' => false, 'message' => 'Page not found']);
+                        exit;
+                    }
+                    
+                    if (!auth()->canDeletePage($page['author_id'])) {
+                        echo json_encode(['success' => false, 'message' => 'You do not have permission to delete this page']);
+                        exit;
+                    }
+                    
                     $stmt = $db->prepare("DELETE FROM pages WHERE id = ?");
                     $stmt->execute([$id]);
                     echo json_encode(['success' => true, 'message' => 'Page deleted successfully']);
@@ -71,9 +122,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'load':
                 $id = $_POST['id'] ?? null;
                 if ($id) {
-                    $stmt = $db->prepare("SELECT * FROM pages WHERE id = ?");
+                    $stmt = $db->prepare("SELECT p.*, u.display_name as author_name FROM pages p LEFT JOIN users u ON p.author_id = u.id WHERE p.id = ?");
                     $stmt->execute([$id]);
                     $page = $stmt->fetch();
+                    
+                    if ($page) {
+                        // Add permission info for the frontend
+                        $page['can_edit'] = auth()->canEditPage($page['author_id']);
+                        $page['can_delete'] = auth()->canDeletePage($page['author_id']);
+                    }
+                    
                     echo json_encode(['success' => true, 'page' => $page]);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Invalid page ID']);
@@ -89,26 +147,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Get all pages for listing
+// Get all pages for listing (with author info)
 $db = getDB();
-$stmt = $db->query("SELECT id, title, slug, content_type, updated_at FROM pages ORDER BY updated_at DESC");
+
+// Power editors and admins see all pages, others see only their own
+if (hasPermission('edit_all_pages')) {
+    $stmt = $db->query("
+        SELECT p.id, p.title, p.slug, p.content_type, p.updated_at, p.author_id, 
+               u.display_name as author_name
+        FROM pages p 
+        LEFT JOIN users u ON p.author_id = u.id 
+        ORDER BY p.updated_at DESC
+    ");
+} else {
+    $stmt = $db->prepare("
+        SELECT p.id, p.title, p.slug, p.content_type, p.updated_at, p.author_id,
+               u.display_name as author_name
+        FROM pages p 
+        LEFT JOIN users u ON p.author_id = u.id 
+        WHERE p.author_id = ?
+        ORDER BY p.updated_at DESC
+    ");
+    $stmt->execute([$currentUser['id']]);
+}
 $pages = $stmt->fetchAll();
+
+// Generate CSRF token for JavaScript
+$csrfToken = csrfToken();
+$favicon = siteFavicon();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Editor - <?php echo h(SITE_TITLE); ?></title>
+    <title>Page Editor - <?php echo h($siteTitle); ?></title>
+    <?php if ($favicon): ?>
+    <link rel="icon" href="<?php echo h($favicon); ?>" type="image/x-icon">
+    <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/editor.css">
+    <style><?php echo colorCSS(); ?></style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo"><?php echo h(SITE_TITLE); ?></a>
+            <a href="/" class="logo"><?php echo h($siteTitle); ?></a>
             <ul class="nav-menu">
                 <li><a href="/">View Site</a></li>
+                <?php if (hasPermission('manage_settings')): ?>
+                <li><a href="/admin/settings.php">Settings</a></li>
+                <?php endif; ?>
+                <li class="user-menu">
+                    <span class="user-badge">
+                        <?php echo h($currentUser['display_name']); ?>
+                        <small>(<?php echo h($currentUser['role_display_name']); ?>)</small>
+                    </span>
+                    <a href="/logout.php" class="btn btn-sm">Logout</a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -117,15 +213,35 @@ $pages = $stmt->fetchAll();
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Pages</h2>
+                <?php if (hasPermission('create_pages')): ?>
                 <button class="btn btn-primary" onclick="newPage()">+ New Page</button>
+                <?php endif; ?>
             </div>
             <ul class="page-list" id="pageList">
-                <?php foreach ($pages as $p): ?>
+                <?php foreach ($pages as $p): 
+                    $canEdit = auth()->canEditPage($p['author_id']);
+                    $canDelete = auth()->canDeletePage($p['author_id']);
+                ?>
                 <li class="page-item" data-id="<?php echo $p['id']; ?>">
-                    <span class="page-title"><?php echo h($p['title']); ?></span>
-                    <span class="page-type"><?php echo h($p['content_type']); ?></span>
-                    <button onclick="loadPage(<?php echo $p['id']; ?>)">Edit</button>
-                    <button onclick="deletePage(<?php echo $p['id']; ?>)">Delete</button>
+                    <div class="page-info">
+                        <span class="page-title"><?php echo h($p['title']); ?></span>
+                        <span class="page-meta">
+                            <span class="page-type"><?php echo h($p['content_type']); ?></span>
+                            <?php if ($p['author_name']): ?>
+                            <span class="page-author">by <?php echo h($p['author_name']); ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="page-actions">
+                        <?php if ($canEdit): ?>
+                        <button onclick="loadPage(<?php echo $p['id']; ?>)">Edit</button>
+                        <?php else: ?>
+                        <button onclick="loadPage(<?php echo $p['id']; ?>)">View</button>
+                        <?php endif; ?>
+                        <?php if ($canDelete): ?>
+                        <button class="btn-danger" onclick="deletePage(<?php echo $p['id']; ?>)">Delete</button>
+                        <?php endif; ?>
+                    </div>
                 </li>
                 <?php endforeach; ?>
             </ul>
@@ -214,6 +330,17 @@ $pages = $stmt->fetchAll();
         </main>
     </div>
     
+    <script>
+        // CSRF Token for all AJAX requests
+        const csrfToken = '<?php echo h($csrfToken); ?>';
+        
+        // User permissions
+        const userPermissions = {
+            canCreate: <?php echo hasPermission('create_pages') ? 'true' : 'false'; ?>,
+            canEditAll: <?php echo hasPermission('edit_all_pages') ? 'true' : 'false'; ?>,
+            canDeleteAll: <?php echo hasPermission('delete_all_pages') ? 'true' : 'false'; ?>
+        };
+    </script>
     <script src="/assets/js/editor.js"></script>
 </body>
 </html>
